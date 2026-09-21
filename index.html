@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cronograma · Aplicación BDS (Baggage Delivery Services)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-0: #f4f6f9;
+        --bg-1: #ffffff;
+        --bg-2: #eef2f7;
+        --line: #dbe2ea;
+        --text-hi: #1a2433;
+        --text-mid: #5b6675;
+        --text-dim: #8b95a3;
+        --amber: #a8660a; /* backend */
+        --cyan: #0a7c93; /* frontend */
+        --green: #1a8a4a; /* QA */
+        --coral: #c94a2c; /* despliegue/devops */
+        --amber-dim: rgba(168, 102, 10, 0.1);
+        --cyan-dim: rgba(10, 124, 147, 0.1);
+        --green-dim: rgba(26, 138, 74, 0.1);
+        --coral-dim: rgba(201, 74, 44, 0.1);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(1200px 600px at 15% -10%, rgba(10,124,147,.05), transparent 60%),
+          radial-gradient(1000px 500px at 100% 0%, rgba(168,102,10,.05), transparent 55%),
+          var(--bg-0);
+        color: var(--text-hi);
+        font-family: "Inter", sans-serif;
+        padding: 20px 14px 50px;
+      }
+      .wrap { max-width: 1180px; margin: 0 auto; }
+
+      /* ---------- HEADER ---------- */
+      header {
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+        border-radius: 10px;
+        padding: 20px 22px;
+        margin-bottom: 18px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(20,30,45,.04);
+      }
+      .eyebrow {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+        color: var(--cyan); margin-bottom: 10px;
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      }
+      .eyebrow .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--green); box-shadow: 0 0 8px var(--green);
+        animation: blink 2s infinite;
+      }
+      @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+      h1 {
+        font-family: "Big Shoulders Display", sans-serif; font-weight: 800;
+        font-size: clamp(24px, 4.4vw, 40px); letter-spacing: .01em;
+        margin: 0 0 6px; line-height: 1.05;
+      }
+      h1 span { color: var(--amber); }
+      .sub { color: var(--text-mid); font-size: 14px; max-width: 720px; line-height: 1.55; }
+
+      .board-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+      .board-cell {
+        background: var(--bg-1); border: 1px solid var(--line);
+        border-radius: 8px; padding: 11px 13px; min-width: 0;
+      }
+      .board-cell .k {
+        font-family: "IBM Plex Mono", monospace; font-size: 10px;
+        letter-spacing: .1em; text-transform: uppercase;
+        color: var(--text-dim); margin-bottom: 6px;
+      }
+      .board-cell .v {
+        font-family: "IBM Plex Mono", monospace; font-size: 17px;
+        font-weight: 600; color: var(--text-hi); word-break: break-word;
+      }
+      .board-cell .v.amber { color: var(--amber); }
+      .board-cell .v.cyan { color: var(--cyan); }
+      .board-cell .v.small { font-size: 12.5px; font-weight: 500; color: var(--text-mid); }
+
+      /* ---------- LEGEND ---------- */
+      .legend {
+        display: flex; gap: 16px; flex-wrap: wrap; margin: 18px 2px 16px;
+        font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--text-mid);
+      }
+      .legend .item { display: flex; align-items: center; gap: 7px; }
+      .legend .sw { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+      /* ---------- CALENDAR ---------- */
+      .cal-nav { display: flex; align-items: center; justify-content: space-between; margin: 6px 2px 10px; }
+      .cal-nav h2 {
+        font-family: "Big Shoulders Display", sans-serif; font-weight: 700;
+        font-size: 20px; margin: 0; text-transform: uppercase;
+        letter-spacing: .03em; color: var(--text-hi);
+      }
+      .cal-nav .arrows { display: flex; gap: 8px; }
+      .cal-nav button {
+        background: var(--bg-1); border: 1px solid var(--line); color: var(--text-hi);
+        width: 34px; height: 34px; border-radius: 7px; cursor: pointer;
+        font-size: 15px; font-family: "IBM Plex Mono", monospace; transition: .15s;
+      }
+      .cal-nav button:hover:not(:disabled) { background: var(--bg-2); border-color: var(--cyan); }
+      .cal-nav button:disabled { opacity: .3; cursor: not-allowed; }
+
+      .weekdays {
+        display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
+        font-family: "IBM Plex Mono", monospace; font-size: 10.5px;
+        letter-spacing: .08em; color: var(--text-dim); text-transform: uppercase;
+        margin-bottom: 6px; padding: 0 2px;
+      }
+      .weekdays div { text-align: center; padding: 4px 0; }
+
+      .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 20px; }
+      .day {
+        background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px;
+        min-height: 88px; padding: 6px; position: relative; cursor: default; transition: .15s;
+      }
+      .day.empty { background: transparent; border-color: transparent; }
+      .day.weekend { background: #eceff3; }
+      .day .num { font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--text-dim); }
+      .day.hasphase { cursor: pointer; }
+      .day.hasphase:hover { border-color: var(--cyan); box-shadow: 0 2px 6px rgba(10,124,147,.12); }
+      .day.hoy { border-color: var(--green); box-shadow: 0 0 0 2px var(--green-dim); }
+      .chips { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+      .chip {
+        font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: .02em;
+        padding: 2px 5px; border-radius: 4px; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis;
+        border-left: 2.5px solid transparent; font-weight: 600;
+      }
+      .chip.backend { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
+      .chip.frontend { background: var(--cyan-dim); color: var(--cyan); border-color: var(--cyan); }
+      .chip.qa { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+      .chip.deploy { background: var(--coral-dim); color: var(--coral); border-color: var(--coral); }
+
+      /* ---------- DETAIL PANEL ---------- */
+      #detail {
+        border: 1px solid var(--line); background: var(--bg-1); border-radius: 10px;
+        padding: 18px 20px; margin-bottom: 22px; min-height: 76px;
+        box-shadow: 0 1px 2px rgba(20,30,45,.04);
+      }
+      #detail .empty-msg {
+        color: var(--text-dim); font-family: "IBM Plex Mono", monospace;
+        font-size: 12px; letter-spacing: .03em;
+      }
+      #detail .d-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+      #detail .d-phase { font-family: "Big Shoulders Display", sans-serif; font-weight: 700; font-size: 19px; letter-spacing: .02em; }
+      #detail .d-badge {
+        font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .1em;
+        text-transform: uppercase; padding: 3px 9px; border-radius: 20px; border: 1px solid;
+      }
+      #detail .d-dates {
+        font-family: "IBM Plex Mono", monospace; font-size: 12px;
+        color: var(--text-mid); margin-bottom: 10px; line-height: 1.7;
+      }
+      #detail .d-dates b { color: var(--text-hi); }
+      #detail .d-justif {
+        background: var(--bg-2); border-left: 3px solid var(--cyan); border-radius: 4px;
+        padding: 9px 12px; margin-bottom: 12px; font-size: 13px;
+        color: var(--text-hi); line-height: 1.55;
+      }
+      #detail .d-justif b {
+        font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--cyan); display: block; margin-bottom: 4px;
+      }
+      #detail ul { margin: 0; padding-left: 18px; color: var(--text-mid); font-size: 13.5px; line-height: 1.65; }
+      #detail ul li::marker { color: var(--text-dim); }
+
+      /* ---------- GANTT ---------- */
+      .strip-title {
+        font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .12em;
+        text-transform: uppercase; color: var(--text-dim); margin: 26px 2px 12px;
+      }
+      .gantt {
+        border: 1px solid var(--line); background: var(--bg-1); border-radius: 10px;
+        padding: 14px 16px 10px; box-shadow: 0 1px 2px rgba(20,30,45,.04);
+      }
+      .g-row { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
+      .g-label { width: 160px; flex-shrink: 0; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--text-mid); }
+      .g-label b { color: var(--text-hi); display: block; font-size: 11.5px; }
+      .g-track { flex: 1; position: relative; height: 22px; background: var(--bg-2); border-radius: 5px; overflow: hidden; }
+      .g-bar {
+        position: absolute; top: 0; bottom: 0; border-radius: 5px;
+        display: flex; align-items: center; padding: 0 8px;
+        font-family: "IBM Plex Mono", monospace; font-size: 10px;
+        color: #fff; font-weight: 700; white-space: nowrap; cursor: pointer;
+      }
+      .g-axis {
+        display: flex; margin-left: 170px; font-family: "IBM Plex Mono", monospace;
+        font-size: 9.5px; color: var(--text-dim); padding-top: 4px;
+        border-top: 1px solid var(--line); margin-top: 6px;
+      }
+      .g-axis span { flex: 1; text-align: left; }
+
+      /* ---------- CATEGORY GROUPS ---------- */
+      .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+      .cat-tab {
+        font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .06em;
+        padding: 7px 13px; border-radius: 20px; border: 1px solid var(--line);
+        background: var(--bg-1); color: var(--text-mid); cursor: pointer; transition: .15s;
+      }
+      .cat-tab.active { color: #fff; border-color: transparent; }
+      .cat-groups { display: flex; flex-direction: column; gap: 14px; }
+      .cat-card {
+        border: 1px solid var(--line); background: var(--bg-1); border-radius: 10px;
+        padding: 14px 16px; box-shadow: 0 1px 2px rgba(20,30,45,.04);
+      }
+      .cat-card.hidden { display: none; }
+      .cat-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+      .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+      .cat-title { font-family: "Big Shoulders Display", sans-serif; font-weight: 700; font-size: 17px; letter-spacing: .01em; }
+      .cat-meta { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--text-dim); margin-left: auto; }
+      .cat-phase-block { margin: 10px 0 0; }
+      .cat-phase-label {
+        font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .06em;
+        text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px;
+      }
+      .cat-phase-label b { color: var(--text-hi); }
+      .cat-card ul { margin: 0; padding-left: 18px; color: var(--text-mid); font-size: 13.5px; line-height: 1.65; }
+      .cat-card ul li::marker { color: var(--text-dim); }
+
+      footer {
+        text-align: center; color: var(--text-dim); font-family: "IBM Plex Mono", monospace;
+        font-size: 10.5px; margin-top: 26px; letter-spacing: .04em; line-height: 1.6;
+      }
+
+      /* ---------- RESPONSIVE ---------- */
+      @media (max-width: 720px) {
+        .board-row { grid-template-columns: repeat(2, 1fr); }
+        .g-label { width: 110px; font-size: 9.5px; }
+        .g-label b { font-size: 10px; }
+        .g-axis { margin-left: 120px; }
+        .chip { font-size: 8px; }
+      }
+      @media (max-width: 520px) {
+        body { padding: 14px 8px 40px; }
+        header { padding: 16px 14px; }
+        .board-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .board-cell { padding: 9px 10px; }
+        .board-cell .v { font-size: 14.5px; }
+        .day { min-height: 70px; padding: 4px; }
+        .day .num { font-size: 10px; }
+        .chip { font-size: 7.3px; padding: 1px 3px; }
+        .weekdays { font-size: 9px; }
+        .g-row { flex-direction: column; align-items: stretch; gap: 4px; }
+        .g-label { width: auto; }
+        .g-axis { margin-left: 0; }
+        #detail .d-phase { font-size: 16.5px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="eyebrow">
+          <span class="dot"></span>Aplicación BDS — BAGGAGE DELIVERY SERVICES — SAASA
+        </div>
+        <h1>
+          Cronograma de Desarrollo <span>·</span> Rastreo y Entrega a Domicilio de Equipaje
+        </h1>
+        <p class="sub">
+          Estimación con
+          <b>1 solo desarrollador full-stack</b>, trabajando una fase a la vez, en modo
+          secuencial: backend, frontend, despliegue y QA.
+        </p>
+
+        <div class="board-row">
+          <div class="board-cell">
+            <div class="k">Inicio</div>
+            <div class="v amber">22 SEP 2026</div>
+            <div class="v small">Martes</div>
+          </div>
+          <div class="board-cell">
+            <div class="k">Fin estimado</div>
+            <div class="v amber">13 NOV 2026</div>
+            <div class="v small">Viernes</div>
+          </div>
+          <div class="board-cell">
+            <div class="k">Esfuerzo total</div>
+            <div class="v cyan">39 DÍAS HÁBILES</div>
+            <div class="v small">secuencial, 1 fase a la vez</div>
+          </div>
+          <div class="board-cell">
+            <div class="k">Duración calendario</div>
+            <div class="v cyan">8 SEMANAS</div>
+            <div class="v small">52 días corridos, sin solape</div>
+          </div>
+        </div>
+
+      </header>
+
+      <div class="legend">
+        <div class="item"><span class="sw" style="background: var(--amber)"></span> Backend / Integraciones</div>
+        <div class="item"><span class="sw" style="background: var(--cyan)"></span> Frontend</div>
+        <div class="item"><span class="sw" style="background: var(--green)"></span> QA</div>
+        <div class="item"><span class="sw" style="background: var(--coral)"></span> Despliegue AWS / DevOps</div>
+      </div>
+
+      <div id="detail">
+        <div class="empty-msg">
+          ▸ TOCA UN DÍA CON ACTIVIDAD PARA VER EL DETALLE Y LA JUSTIFICACIÓN DE LA FASE
+        </div>
+      </div>
+
+      <div class="cal-nav">
+        <div class="arrows"><button id="prevBtn">‹</button></div>
+        <h2 id="monthLabel">Septiembre 2026</h2>
+        <div class="arrows"><button id="nextBtn">›</button></div>
+      </div>
+      <div class="weekdays">
+        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+      </div>
+      <div class="grid" id="calGrid"></div>
+
+      <div class="strip-title">Tareas por categoría</div>
+      <div class="cat-tabs" id="catTabs"></div>
+      <div class="cat-groups" id="catGroups"></div>
+
+      <div class="strip-title">Línea de tiempo de fases (secuencial, referencia)</div>
+      <div class="gantt" id="ganttWrap"></div>
+
+      <footer>
+        DOCUMENTO FUNCIONAL BDS · CRONOGRAMA ACTUALIZADO 19 SEP 2026<br />
+        39 días hábiles · 22 sep → 13 nov 2026 · sin considerar feriados
+      </footer>
+    </div>
+
+    <script>
+      // ---------- DATA ----------
+      // Backend: las 5 fases de construcción completa, desde el modelo de datos.
+      // Frontend: las 6 fases de la guía de construcción del frontend BDS.
+      // QA y despliegue: se mantienen como estaban en el cronograma original.
+      const phases = [
+        {
+          id: 1, team: "backend", label: "Fase 1",
+          name: "Modelo de datos y backend base",
+          start: "2026-09-22", end: "2026-09-24", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Proyecto Spring Boot 3.3 con Java 17, estructura por capas y configuración de los cuatro perfiles (base, dev, qa, prd)",
+            "Modelo de datos definitivo y migraciones Flyway: estación, línea aérea, usuario, empresa courrier, conductor, BDO, hito y vuelo",
+            "Entidades base AuditableEntity, EstacionScopedEntity y BdoScopedEntity, con auditoría automática",
+            "Repositorios, servicios y controllers CRUD de los catálogos: estaciones, líneas aéreas y su asignación cruzada",
+            "Swagger/OpenAPI, manejo global de excepciones con ApiResponse uniforme y validación de variables de entorno al arrancar",
+          ],
+          justificacion:
+            "Es la base de todo lo demás: sin el modelo de datos, las migraciones y las entidades CRUD básicas, ninguna fase posterior puede empezar. Al ser un solo desarrollador full-stack, el diseño, la implementación y las pruebas de este cimiento se hacen de forma secuencial, sin poder adelantar trabajo de otras fases en paralelo.",
+        },
+        {
+          id: 2, team: "backend", label: "Fase 2",
+          name: "Seguridad, autenticación y aislamiento multinivel",
+          start: "2026-09-25", end: "2026-09-29", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Autenticación JWT: JwtUtil, JwtFilter y AuthenticatedPrincipal con rol, estación y empresa courrier",
+            "Login por username, DNI o correo, y recuperación de contraseña con código de seis dígitos enviado por correo",
+            "Política de contraseñas, bloqueo temporal de login por intentos fallidos y limitación de peticiones por IP",
+            "BdsContext y ContextoActivoHolder: aislamiento por estación, línea aérea y empresa courrier, resuelto desde el token y las cabeceras",
+            "Gestión de usuarios y de sus accesos por estación, con alta restringida a administrador",
+            "Pruebas cruzadas de aislamiento entre roles",
+          ],
+          justificacion:
+            "El aislamiento multinivel es el requisito que atraviesa todo el sistema: cada consulta posterior lo da por hecho. Construirlo junto con la autenticación, y no después, evita tener que reescribir repositorios y servicios cuando aparezca el filtrado por estación y empresa. Las pruebas cruzadas de acceso se hacen en esta misma fase, mientras el modelo de permisos está fresco.",
+        },
+        {
+          id: 3, team: "backend", label: "Fase 3",
+          name: "BDO, hitos y flujos de estado",
+          start: "2026-09-30", end: "2026-10-02", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Entidades BDO, HitoBdo y Vuelo, heredadas de las entidades con alcance por estación",
+            "Specifications para el filtrado por contexto y listados con paginación del servidor",
+            "Alta manual de BDO y ciclo de estados: recibido, asignado, recogido, en camino, entregado, devuelto y fallido",
+            "Registro de hitos por el conductor, con cambio automático de estado del BDO",
+            "Token público de seguimiento por BDO y endpoint de consulta sin autenticación",
+            "Carga y consulta de vuelos por estación y línea aérea",
+          ],
+          justificacion:
+            "Es el núcleo funcional del sistema y la entidad que todas las demás rodean. Se construye después de la seguridad porque cada consulta de BDO se filtra por el contexto activo, y antes de la asignación de courrier porque esta necesita el ciclo de estados ya definido para no cambiarlo dos veces.",
+        },
+        {
+          id: 4, team: "backend", label: "Fase 4",
+          name: "Asignación de courrier, WhatsApp y seguimiento en vivo",
+          start: "2026-10-05", end: "2026-10-07", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Alta de cuenta de WhatsApp Business y aprobación de la plantilla — trámite con Meta, iniciado administrativamente desde la Fase 1 por sus tiempos externos",
+            "Empresas courrier y conductores, con generación de credenciales de un solo uso",
+            "Asignación atómica de BDO y empresa courrier con envío del enlace de seguimiento en la misma transacción (RN-01), y reenvío secundario (RN-02)",
+            "Asignación de conductor por parte del administrador de la empresa courrier, con aislamiento por empresa (RN-03)",
+            "WebSocket STOMP para el seguimiento en vivo, con canal por BDO de solo lectura",
+            "Publicación de la ubicación GPS del conductor y difusión de los hitos al canal del pasajero",
+          ],
+          justificacion:
+            "La asignación y el seguimiento en vivo se construyen juntos porque comparten el mismo hilo: al asignar se genera el token que el pasajero usa para suscribirse al canal. El trámite de WhatsApp Business con Meta conviene iniciarlo desde la primera fase por sus tiempos de aprobación externos, aunque el código que lo consume se escriba recién acá.",
+        },
+        {
+          id: 5, team: "backend", label: "Fase 5",
+          name: "Evidencias, cierre del caso, auditoría y reportes",
+          start: "2026-10-08", end: "2026-10-12", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Integración con AWS S3: bucket, credenciales en Secrets Manager y URLs pre-firmadas",
+            "Subida de evidencia fotográfica de los hitos de recogida y entrega",
+            "Firma digital del pasajero y validación de evidencia obligatoria antes de avanzar de estado (RN-05)",
+            "Comprobante PDF de entrega y endpoint de descarga",
+            "Auditoría de acciones sensibles por usuario y estación",
+            "Reportes por estación, línea aérea, empresa courrier y conductor, con exportación a Excel",
+          ],
+          justificacion:
+            "El cierre del caso se apoya en el flujo de asignación y seguimiento ya construido: fotos, firma y comprobante solo tienen sentido sobre una orden que ya recorrió sus hitos. Los reportes van en la misma fase porque leen datos ya filtrados por el aislamiento de la Fase 2; implementarlos antes obligaría a ajustar las consultas dos veces.",
+        },
+        {
+          id: 6, team: "frontend", label: "Fase 6",
+          name: "Cimientos e infraestructura del frontend",
+          start: "2026-10-13", end: "2026-10-15", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Proyecto Vite con React 19, estructura de carpetas y tokens de diseño tomados del prototipo",
+            "Cliente HTTP con los tres interceptores: JWT, cabeceras de contexto, y manejo de 401, 403 y 429",
+            "Contextos de autenticación, modales y WebSocket, más el límite de errores de la aplicación",
+            "Guardián de sesión con la exención de los roles de courrier, guardián por rol y enrutador completo",
+            "Vitest con umbral de cobertura, mocks de API y componentes base de interfaz",
+          ],
+          justificacion:
+            "Toda la infraestructura transversal se monta antes de la primera pantalla. Es la fase que más se tienta uno de recortar y la que más caro se paga: un guardián de sesión que no contemple a los roles sin estación asignada deja a esos usuarios en un bucle que recién aparece dos fases después y obliga a rehacerlo.",
+        },
+        {
+          id: 7, team: "frontend", label: "Fase 7",
+          name: "Autenticación, contexto de trabajo y layout",
+          start: "2026-10-16", end: "2026-10-20", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Pantalla de ingreso con un solo campo de usuario, que acepta username, DNI o correo",
+            "Manejo del bloqueo por intentos fallidos, con cuenta regresiva",
+            "Recuperación de contraseña en tres pasos y cambio de contraseña propia",
+            "Selección de estación y línea aérea, con los cuatro caminos según el rol",
+            "Barra superior con selector de contexto y pestañas filtradas por rol, y panel de bienvenida",
+          ],
+          justificacion:
+            "Es la puerta de entrada y, a la vez, la fase que hace real el aislamiento en el cliente. Si el contexto de trabajo queda flojo, las pantallas siguientes muestran datos de la estación equivocada y nadie lo nota hasta producción. Aquí se fija el patrón de incluir la estación activa en la clave de caché, que se aplica en todas las fases posteriores.",
+        },
+        {
+          id: 8, team: "frontend", label: "Fase 8",
+          name: "BDO: núcleo del agente",
+          start: "2026-10-21", end: "2026-10-26", days: 4,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Bandeja de BDOs con indicadores, filtros, paginación del servidor y conversión a tarjetas en móvil",
+            "Alta manual de BDO con selección de vuelo y datos del pasajero",
+            "Asignación de empresa courrier con envío automático del enlace por WhatsApp",
+            "Panel de detalle con la línea de tiempo de hitos y reenvío del enlace",
+            "Componentes reutilizables de línea de tiempo, tabla e indicadores",
+          ],
+          justificacion:
+            "Es el corazón del sistema y la fase más larga del frontend. Al cerrarla el agente ya puede trabajar. La línea de tiempo de hitos que se construye acá la reutilizan después la pantalla del conductor y la del pasajero, así que conviene resolverla bien una sola vez.",
+        },
+        {
+          id: 9, team: "frontend", label: "Fase 9",
+          name: "Empresa courrier y conductor",
+          start: "2026-10-27", end: "2026-10-29", days: 3,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Panel de la empresa courrier: solicitudes pendientes, asignación de conductor y alta de conductores con sus credenciales",
+            "Pantalla de entregas del conductor, diseñada primero para móvil de 320 píxeles",
+            "Registro de los tres hitos en secuencia, con captura de evidencia fotográfica",
+            "Envío de la ubicación GPS mientras la orden está en camino",
+          ],
+          justificacion:
+            "Cierra el ciclo operativo completo: BDO, courrier, conductor y entrega. Es donde el diseño móvil deja de ser opcional, porque el conductor trabaja en la calle, con una mano y a veces con sol de frente.",
+        },
+        {
+          id: 10, team: "frontend", label: "Fase 10",
+          name: "Seguimiento del pasajero",
+          start: "2026-10-30", end: "2026-11-02", days: 2,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Ruta pública por token, fuera del guardián de sesión",
+            "Progreso de cinco pasos, cabecera de estado dinámica y línea de tiempo de hitos",
+            "Conexión al canal de seguimiento en vivo, con reconexión automática",
+            "Mapa con carga diferida y firma de recepción del pasajero",
+          ],
+          justificacion:
+            "Es la única pantalla que ven personas ajenas a SAASA, y la usa alguien molesto porque perdió su equipaje: tiene que entenderse sin explicación. Se ejecuta después de la pantalla del conductor, que es quien alimenta los eventos que esta pantalla muestra.",
+        },
+        {
+          id: 11, team: "frontend", label: "Fase 11",
+          name: "Administración, vuelos y reportes",
+          start: "2026-11-03", end: "2026-11-04", days: 2,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Usuarios SAASA con sus accesos por estación y línea aérea, empresas courrier y conductores",
+            "Catálogos de estaciones y aerolíneas, y asignación de aerolíneas por estación",
+            "Vuelos y carga masiva desde Excel, con vista previa, validación por fila y envío por lotes",
+            "Pantalla de reportes con filtros y exportación, e historial de auditoría",
+          ],
+          justificacion:
+            "Hasta acá se trabajó con los datos sembrados por las migraciones. Al cerrar esta fase SAASA puede configurar y operar el sistema sin tocar la base de datos. Va al final del frontend porque es la parte que menos bloquea: el flujo operativo ya funciona con los catálogos mínimos.",
+        },
+        {
+          id: 12, team: "deploy", label: "Fase 12",
+          name: "Infraestructura AWS y despliegue",
+          start: "2026-11-05", end: "2026-11-06", days: 2,
+          resp: "Desarrollador (full-stack / DevOps)",
+          tasks: [
+            "Aprovisionamiento de la infraestructura AWS: VPC, EC2, RDS, S3, IAM y Secrets Manager",
+            "Despliegue del backend con systemd y del frontend, con Nginx y certificado TLS",
+            "Configuración de dominio y de las variables y secretos de cada ambiente",
+            "Pipelines de integración continua para desarrollo, QA y producción",
+          ],
+          justificacion:
+            "El aprovisionamiento de la infraestructura y el despliegue recién tienen sentido una vez que el sistema está funcionalmente completo, para no desplegar y volver a desplegar contra una base de código que sigue cambiando.",
+        },
+        {
+          id: 13, team: "deploy", label: "Fase 13",
+          name: "Hardening de seguridad",
+          start: "2026-11-09", end: "2026-11-10", days: 2,
+          resp: "Desarrollador (full-stack)",
+          tasks: [
+            "Grupos de seguridad, revisión de permisos IAM y validación de entradas en el borde",
+            "Verificación de la limitación de peticiones y del bloqueo de login en el ambiente real",
+            "CloudWatch: registros, alarmas y respaldos automáticos",
+          ],
+          justificacion:
+            "El hardening se ejecuta sobre la infraestructura ya desplegada, no antes, porque necesita el entorno real para configurar reglas de red y monitoreo. Incluye verificar que las protecciones que en desarrollo vienen apagadas queden efectivamente activas en producción.",
+        },
+        {
+          id: 14, team: "qa", label: "Fase 14",
+          name: "QA integral y piloto",
+          start: "2026-11-11", end: "2026-11-13", days: 3,
+          resp: "Desarrollador (full-stack / QA)",
+          tasks: [
+            "QA integral de los tres tramos del flujo: alta, asignación y envío, seguimiento y cierre",
+            "Pruebas cruzadas de aislamiento entre estaciones, líneas aéreas y empresas courrier",
+            "Validación de los criterios de aceptación del documento funcional",
+            "Prueba piloto con un courrier real por estación antes de habilitar a todos",
+          ],
+          justificacion:
+            "El QA integral y la prueba piloto son la última fase porque requieren el sistema completo, desplegado y con seguridad configurada. Al no haber QA dedicado, el propio desarrollador ejecuta esta validación al final, en vez de en paralelo con la codificación.",
+        },
+      ];
+
+      const teamColor = { backend: "var(--amber)", frontend: "var(--cyan)", qa: "var(--green)", deploy: "var(--coral)" };
+      const teamName = { backend: "Backend", frontend: "Frontend", qa: "QA", deploy: "Despliegue" };
+
+      function toDate(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
+      function isoDay(d) {
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      }
+      function fmt(d) { return d.toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); }
+
+      // mapa fecha -> fases activas ese día (solo hábiles)
+      const dayMap = {};
+      phases.forEach((p) => {
+        let cur = toDate(p.start);
+        const end = toDate(p.end);
+        while (cur <= end) {
+          const dow = cur.getDay();
+          if (dow !== 0 && dow !== 6) {
+            const key = isoDay(cur);
+            (dayMap[key] = dayMap[key] || []).push(p);
+          }
+          cur.setDate(cur.getDate() + 1);
+        }
+      });
+
+      // ---------- Calendario ----------
+      let viewYear = 2026, viewMonth = 8; // 8 = septiembre
+      const monthNames = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+      const minMonth = { y: 2026, m: 8 }, maxMonth = { y: 2026, m: 10 }; // sep, oct, nov 2026
+      const HOY = "2026-09-22";
+
+      function renderCalendar() {
+        document.getElementById("monthLabel").textContent = monthNames[viewMonth] + " " + viewYear;
+        document.getElementById("prevBtn").disabled = viewYear === minMonth.y && viewMonth === minMonth.m;
+        document.getElementById("nextBtn").disabled = viewYear === maxMonth.y && viewMonth === maxMonth.m;
+
+        const grid = document.getElementById("calGrid");
+        grid.innerHTML = "";
+
+        const firstOfMonth = new Date(viewYear, viewMonth, 1);
+        let startWeekday = (firstOfMonth.getDay() + 6) % 7; // Lun = 0
+        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+        for (let i = 0; i < startWeekday; i++) {
+          const e = document.createElement("div");
+          e.className = "day empty";
+          grid.appendChild(e);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateObj = new Date(viewYear, viewMonth, d);
+          const key = isoDay(dateObj);
+          const dow = dateObj.getDay();
+          const cell = document.createElement("div");
+          cell.className = "day" + (dow === 0 || dow === 6 ? " weekend" : "") + (key === HOY ? " hoy" : "");
+          const active = dayMap[key] || [];
+
+          const num = document.createElement("div");
+          num.className = "num";
+          num.textContent = d;
+          cell.appendChild(num);
+
+          if (active.length) {
+            cell.classList.add("hasphase");
+            const chips = document.createElement("div");
+            chips.className = "chips";
+            active.forEach((p) => {
+              const c = document.createElement("div");
+              c.className = "chip " + p.team;
+              c.textContent = p.label;
+              chips.appendChild(c);
+            });
+            cell.appendChild(chips);
+            cell.addEventListener("click", () => showDetail(active, key));
+          }
+          grid.appendChild(cell);
+        }
+      }
+
+      function showDetail(list, key) {
+        const panel = document.getElementById("detail");
+        const dateStr = fmt(toDate(key));
+        panel.innerHTML = "";
+        list.forEach((p) => {
+          const block = document.createElement("div");
+          block.style.marginBottom = "14px";
+          const isStart = key === p.start;
+          const isEnd = key === p.end;
+          let tag = "";
+          if (isStart && isEnd) tag = " · inicio y fin de la fase";
+          else if (isStart) tag = " · día de inicio";
+          else if (isEnd) tag = " · día de fin";
+
+          block.innerHTML = `
+            <div class="d-head">
+              <div class="d-phase">${p.label} — ${p.name}</div>
+              <div class="d-badge" style="color:${teamColor[p.team]};border-color:${teamColor[p.team]}">${teamName[p.team]}</div>
+            </div>
+            <div class="d-dates">Fecha: <b>${dateStr}</b>${tag}<br>Inicio fase: <b>${fmt(toDate(p.start))}</b> &nbsp;→&nbsp; Fin fase: <b>${fmt(toDate(p.end))}</b> &nbsp;|&nbsp; Duración: <b>${p.days} día(s) hábil(es)</b><br>Responsable: <b>${p.resp}</b></div>
+            <div class="d-justif"><b>Sustento</b>${p.justificacion}</div>
+            <ul>${p.tasks.map((t) => `<li>${t}</li>`).join("")}</ul>
+          `;
+          panel.appendChild(block);
+        });
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      document.getElementById("prevBtn").addEventListener("click", () => {
+        viewMonth--;
+        if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+        renderCalendar();
+      });
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        viewMonth++;
+        if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+        renderCalendar();
+      });
+
+      renderCalendar();
+
+      // ---------- Gantt ----------
+      const projectStart = toDate("2026-09-22");
+      const projectEnd = toDate("2026-11-13");
+      const totalSpanDays = Math.round((projectEnd - projectStart) / 86400000) + 1;
+
+      const ganttWrap = document.getElementById("ganttWrap");
+      phases.forEach((p) => {
+        const row = document.createElement("div");
+        row.className = "g-row";
+        const offset = Math.round((toDate(p.start) - projectStart) / 86400000);
+        const span = Math.round((toDate(p.end) - toDate(p.start)) / 86400000) + 1;
+        const leftPct = (offset / totalSpanDays) * 100;
+        const widthPct = (span / totalSpanDays) * 100;
+        row.innerHTML = `
+          <div class="g-label"><b>${p.label}</b>${p.name}</div>
+          <div class="g-track">
+            <div class="g-bar" style="left:${leftPct}%; width:${widthPct}%; background:${teamColor[p.team]};" title="${p.name}: ${fmt(toDate(p.start))} → ${fmt(toDate(p.end))}">${p.days}d</div>
+          </div>
+        `;
+        row.querySelector(".g-bar").addEventListener("click", () => {
+          const sd = toDate(p.start);
+          viewYear = sd.getFullYear();
+          viewMonth = sd.getMonth();
+          renderCalendar();
+          showDetail([p], p.start);
+        });
+        ganttWrap.appendChild(row);
+      });
+
+      const axis = document.createElement("div");
+      axis.className = "g-axis";
+      axis.innerHTML = `<span>${fmt(projectStart)}</span><span style="text-align:right">${fmt(projectEnd)}</span>`;
+      ganttWrap.appendChild(axis);
+
+      // ---------- Tareas por categoría ----------
+      const catOrder = ["backend", "frontend", "qa", "deploy"];
+      const catFullName = {
+        backend: "Backend / Integraciones",
+        frontend: "Frontend",
+        qa: "Pruebas de calidad (QA)",
+        deploy: "Despliegue AWS",
+      };
+
+      const catTabs = document.getElementById("catTabs");
+      const allTab = document.createElement("div");
+      allTab.className = "cat-tab active";
+      allTab.textContent = "Todas";
+      allTab.dataset.cat = "all";
+      catTabs.appendChild(allTab);
+      catOrder.forEach((cat) => {
+        const tab = document.createElement("div");
+        tab.className = "cat-tab";
+        tab.textContent = catFullName[cat];
+        tab.dataset.cat = cat;
+        catTabs.appendChild(tab);
+      });
+
+      const catGroups = document.getElementById("catGroups");
+      catOrder.forEach((cat) => {
+        const phasesInCat = phases.filter((p) => p.team === cat);
+        if (!phasesInCat.length) return;
+        const totalDays = phasesInCat.reduce((s, p) => s + p.days, 0);
+        const totalTasks = phasesInCat.reduce((s, p) => s + p.tasks.length, 0);
+
+        const card = document.createElement("div");
+        card.className = "cat-card";
+        card.dataset.cat = cat;
+
+        const head = document.createElement("div");
+        head.className = "cat-head";
+        head.innerHTML = `
+          <span class="cat-dot" style="background:${teamColor[cat]}"></span>
+          <span class="cat-title">${catFullName[cat]}</span>
+          <span class="cat-meta">${totalDays} día(s) hábil(es) · ${totalTasks} tarea(s) · ${phasesInCat.length} fase(s)</span>
+        `;
+        card.appendChild(head);
+
+        phasesInCat.forEach((p) => {
+          const block = document.createElement("div");
+          block.className = "cat-phase-block";
+          block.innerHTML = `
+            <div class="cat-phase-label"><b>${p.label}</b> — ${p.name} (${fmt(toDate(p.start))} → ${fmt(toDate(p.end))})</div>
+            <ul>${p.tasks.map((t) => `<li>${t}</li>`).join("")}</ul>
+          `;
+          card.appendChild(block);
+        });
+
+        catGroups.appendChild(card);
+      });
+
+      catTabs.addEventListener("click", (e) => {
+        const tab = e.target.closest(".cat-tab");
+        if (!tab) return;
+        [...catTabs.children].forEach((t) => {
+          t.classList.remove("active");
+          t.style.background = "var(--bg-1)";
+          t.style.color = "var(--text-mid)";
+        });
+        tab.classList.add("active");
+        const selected = tab.dataset.cat;
+        tab.style.background = selected === "all" ? "var(--text-hi)" : teamColor[selected];
+        tab.style.color = "#fff";
+        [...catGroups.children].forEach((card) => {
+          card.classList.toggle("hidden", selected !== "all" && card.dataset.cat !== selected);
+        });
+      });
+      allTab.style.background = "var(--text-hi)";
+      allTab.style.color = "#fff";
+    </script>
+  </body>
+</html>
